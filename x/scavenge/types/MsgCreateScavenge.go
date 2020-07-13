@@ -42,7 +42,7 @@ func (msg MsgCreateScavenge) GetSignBytes() []byte {
 }
 
 // ValidateBasic validity check for the AnteHandler
-func (msg MsgCreateScavenge	) ValidateBasic() error {
+func (msg MsgCreateScavenge) ValidateBasic() error {
 	if msg.Creator.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing creator address")
 	}
