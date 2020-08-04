@@ -15,5 +15,5 @@ const (
 
 	// Prefixes
 	ScavengePrefix = "sk-"
-	CommitPrefix = "-ck"
+	CommitPrefix = "ck-"
 )
