@@ -66,7 +66,8 @@ func (k Keeper) SetScavenge(ctx sdk.Context, scavenge types.Scavenge) {
 	store.Set(key, bz)
 }
 
-func (k Keeper) delete(ctx sdk.Context, key string) {
+// DeleteScavenge deletes a scavenge
+func (k Keeper) DeleteScavenge(ctx sdk.Context, solutionHash string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete([]byte(key))
+	store.Delete([]byte(solutionHash))
 }
