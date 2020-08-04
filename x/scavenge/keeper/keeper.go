@@ -71,3 +71,15 @@ func (k Keeper) DeleteScavenge(ctx sdk.Context, solutionHash string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete([]byte(solutionHash))
 }
+
+// GetScavengesIterator gets an iterator over all scavenges in which the keys are the solutionHashes and the values are the scavenges
+func (k Keeper) GetScavengesIterator(ctx sdk.Context) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return sdk.KVStorePrefixIterator(store, []byte(types.ScavengePrefix))
+}
+
+// GetCommitsIterator gets an iterator over all commits in which the keys are the prefix and solutionHashes and the values are the scavenges
+func (k Keeper) GetCommitsIterator(ctx sdk.Context) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return sdk.KVStorePrefixIterator(store, []byte(types.CommitPrefix))
+}
