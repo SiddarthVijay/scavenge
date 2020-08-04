@@ -38,18 +38,32 @@ func (k Keeper) GetCommit(ctx sdk.Context, solutionScavengerHash string) (types.
 	store := ctx.KVStore(k.storeKey)
 	var commit types.Commit
 	byteKey := []byte(types.CommitPrefix + solutionScavengerHash)
-	// Redo this keeper
 	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(byteKey), &item)
 	if err != nil {
-		return nil, err
+		return commit, err
 	}
-	return item, nil
+	return commit, nil
 }
 
-func (k Keeper) set(ctx sdk.Context, key string, value /* TODO: fill out this type */ ) {
+// GetScavenge returns the scavenge information
+func (k Keeper) GetScavenge(ctx sdk.Context, solutionHash string) (types.Scavenge, error) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(value)
-	store.Set([]byte(key), bz)
+	var scavenge types.Scavenge
+	byteKey := []byte(types.ScavengePrefix + solutionHash)
+	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(byteKey), &scavenge)
+	if err != nil {
+		return scavenge, err
+	}
+	return scavenge, nil
+}
+
+// SetScavenge sets a scavenge
+func (k Keeper) SetScavenge(ctx sdk.Context, scavenge types.Scavenge) {
+	solutionHash := scavenge.SolutionHash
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(scavenge)
+	key := []byte(types.ScavengePrefix + solutionHash)
+	store.Set(key, bz)
 }
 
 func (k Keeper) delete(ctx sdk.Context, key string) {
