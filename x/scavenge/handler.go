@@ -1,6 +1,8 @@
 package scavenge
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/SiddarthVijay/scavenge/x/scavenge/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -94,18 +96,55 @@ func handleMsgCommitSolution(ctx sdk.Context, k Keeper, msg MsgCommitSolution) (
 	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsg<Action>(ctx sdk.Context, k Keeper, msg Msg<Action>) (*sdk.Result, error) {
-	err := k.<Action>(ctx, msg.ValidatorAddr)
+func handleMsgRevealSolution(ctx sdk.Context, k Keeper, msg MsgRevealSolution) (*sdk.Result, error) {
+	var solutionScavengerBytes = []byte(msg.Solution + msg.Scavenger.String())
+	var solutionScavengerHash = sha256.Sum256(solutionScavengerBytes)
+	var solutionScavengerHashString = hex.EncodeToString(solutionScavengerHash[:])
+
+	err := k.GetCommit(ctx, solutionScavengerHashString)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "A commit with this solutionSavengerHash does not exist")
 	}
 
-	// TODO: Define your msg events
+	var solutionHash = sha256.Sum256([]byte(msg.Solution))
+	var solutionHashString = hex.EncodeToString(solutionHash[:])
+
+	var scavenge types.Scavenge
+	scavenge, err := k.GetScavenge(ctx, solutionHashString)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "A scavenge with that hash doesnt exist")
+	}
+
+	// Check if it has already been solved
+	if scavenge.Scavenger != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "This scavenge has already been solved")
+	}
+
+	// If it hasnt been solved yet, reveal the nonhashed answer and credit the scavenger
+	scavenge.Scavenger = msg.Scavenger
+	scavenge.Solution = msg.Solution
+
+	// Now reward the scavenger
+	moduleAcct := sdk.AccAddress(crypto.Address([]byte(types.ModuleName)))
+	sdkError := k.CoinKeeper.SendCoins(ctx, moduleAcct, msg.Scavenger, scavenge.Reward)
+
+	if sdkError != nil {
+		return nil, sdkError
+	}
+
+	k.SetScavenge(ctx, scavenge)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyAction, types.EventTypeSolveScavenge),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Scavenger.String()),
+			sdk.NewAttribute(types.AttributeSolutionHash, solutionHashString),
+			sdk.NewAttribute(types.AttributeDescription, scavenge.Description),
+			sdk.NewAttribute(types.AttributeSolution, msg.Solution),
+			sdk.NewAttribute(types.AttributeScavenger, scavenge.Scavenger.String()),
+			sdk.NewAttribute(types.AttributeReward, scavenge.Reward.String()),
 		),
 	)
 
