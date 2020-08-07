@@ -2,6 +2,8 @@ package scavenge
 
 import (
 	"fmt"
+	"github.com/SiddarthVijay/scavenge/x/scavenge/types"
+	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -25,19 +27,39 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-// handle<Action> does x
-func handleMsg<Action>(ctx sdk.Context, k Keeper, msg Msg<Action>) (*sdk.Result, error) {
-	err := k.<Action>(ctx, msg.ValidatorAddr)
-	if err != nil {
-		return nil, err
+func handleMsgCreateScavenge(ctx sdk.Context, k Keeper, msg MsgCreateScavenge) (*sdk.Result, error) {
+	var scavenge = types.Scavenge{
+		Creator:      msg.Creator,
+		Description:  msg.Description,
+		SolutionHash: msg.SolutionHash,
+		Reward:       msg.Reward,
 	}
 
-	// TODO: Define your msg events
+	// Check if the scavenge exists already
+	_, err := k.GetScavenge(ctx, msg.SolutionHash)
+	if err == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Scavenge with that solution hash already exists")
+	}
+
+	// Send reward coins to the escrow account
+	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	sdkError := k.CoinKeeper.SendCoins(ctx, scavenge.Creator, moduleAcct, scavenge.Reward)
+
+	if sdkError != nil {
+		return nil, sdkError
+	}
+
+	k.SetScavenge(ctx, scavenge)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyAction, types.EventTypeCreateScavenge),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Creator.String()),
+			sdk.NewAttribute(types.AttributeDescription, msg.Description),
+			sdk.NewAttribute(types.AttributeSolutionHash, msg.SolutionHash),
+			sdk.NewAttribute(types.AttributeReward, msg.Reward.String()),
 		),
 	)
 
