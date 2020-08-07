@@ -58,6 +58,13 @@ func (k Keeper) GetScavenge(ctx sdk.Context, solutionHash string) (types.Scaveng
 }
 
 // SetCommit sets a commit
+func (k Keeper) SetCommit(ctx sdk.Context, commit types.Commit) {
+	solutionScavengerHash := commit.SolutionScavengerHash
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(commit)
+	key := []byte(types.CommitPrefix + solutionScavengerHash)
+	store.Set(key, bz)
+}
 
 // SetScavenge sets a scavenge
 func (k Keeper) SetScavenge(ctx sdk.Context, scavenge types.Scavenge) {
