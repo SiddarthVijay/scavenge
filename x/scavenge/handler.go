@@ -66,7 +66,6 @@ func handleMsgCreateScavenge(ctx sdk.Context, k Keeper, msg MsgCreateScavenge) (
 	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-// handle<Action> does x
 func handleMsgCommitSolution(ctx sdk.Context, k Keeper, msg MsgCommitSolution) (*sdk.Result, error) {
 	var commit = types.Commit{
 		Scavenger:             msg.Scavenger,
@@ -79,20 +78,22 @@ func handleMsgCommitSolution(ctx sdk.Context, k Keeper, msg MsgCommitSolution) (
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Commit with that hash already exists")
 	}
 
-	k.SetCommit
+	k.SetCommit(ctx, commit)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyAction, types.EventTypeCommitSolution),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Scavenger.String()),
+			sdk.NewAttribute(types.AttributeSolutionHash, msg.SolutionHash),
+			sdk.NewAttribute(type.AttributeSolutionScavengerHash, msg.SolutionScavengerHash),
 		),
 	)
 
 	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-// handle<Action> does x
 func handleMsg<Action>(ctx sdk.Context, k Keeper, msg Msg<Action>) (*sdk.Result, error) {
 	err := k.<Action>(ctx, msg.ValidatorAddr)
 	if err != nil {
