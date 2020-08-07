@@ -67,13 +67,20 @@ func handleMsgCreateScavenge(ctx sdk.Context, k Keeper, msg MsgCreateScavenge) (
 }
 
 // handle<Action> does x
-func handleMsg<Action>(ctx sdk.Context, k Keeper, msg Msg<Action>) (*sdk.Result, error) {
-	err := k.<Action>(ctx, msg.ValidatorAddr)
-	if err != nil {
-		return nil, err
+func handleMsgCommitSolution(ctx sdk.Context, k Keeper, msg MsgCommitSolution) (*sdk.Result, error) {
+	var commit = types.Commit{
+		Scavenger:             msg.Scavenger,
+		SolutionHash:          msg.SolutionHash,
+		SolutionScavengerHash: msg.SolutionScavengerHash,
 	}
 
-	// TODO: Define your msg events
+	_, err := k.GetCommit(ctx, msg.SolutionScavengerHash)
+	if err == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Commit with that hash already exists")
+	}
+
+	k.SetCommit
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

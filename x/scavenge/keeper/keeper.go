@@ -57,6 +57,8 @@ func (k Keeper) GetScavenge(ctx sdk.Context, solutionHash string) (types.Scaveng
 	return scavenge, nil
 }
 
+// SetCommit sets a commit
+
 // SetScavenge sets a scavenge
 func (k Keeper) SetScavenge(ctx sdk.Context, scavenge types.Scavenge) {
 	solutionHash := scavenge.SolutionHash
