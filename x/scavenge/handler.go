@@ -89,7 +89,7 @@ func handleMsgCommitSolution(ctx sdk.Context, k Keeper, msg MsgCommitSolution) (
 			sdk.NewAttribute(sdk.AttributeKeyAction, types.EventTypeCommitSolution),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Scavenger.String()),
 			sdk.NewAttribute(types.AttributeSolutionHash, msg.SolutionHash),
-			sdk.NewAttribute(type.AttributeSolutionScavengerHash, msg.SolutionScavengerHash),
+			sdk.NewAttribute(types.AttributeSolutionScavengerHash, msg.SolutionScavengerHash),
 		),
 	)
 
@@ -101,7 +101,7 @@ func handleMsgRevealSolution(ctx sdk.Context, k Keeper, msg MsgRevealSolution) (
 	var solutionScavengerHash = sha256.Sum256(solutionScavengerBytes)
 	var solutionScavengerHashString = hex.EncodeToString(solutionScavengerHash[:])
 
-	err := k.GetCommit(ctx, solutionScavengerHashString)
+	_, err := k.GetCommit(ctx, solutionScavengerHashString)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "A commit with this solutionSavengerHash does not exist")
 	}
@@ -110,7 +110,7 @@ func handleMsgRevealSolution(ctx sdk.Context, k Keeper, msg MsgRevealSolution) (
 	var solutionHashString = hex.EncodeToString(solutionHash[:])
 
 	var scavenge types.Scavenge
-	scavenge, err := k.GetScavenge(ctx, solutionHashString)
+	scavenge, err = k.GetScavenge(ctx, solutionHashString)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "A scavenge with that hash doesnt exist")
 	}
