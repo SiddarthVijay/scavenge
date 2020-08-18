@@ -52,7 +52,7 @@ func GetCmdCreateScavenge(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var solution := args[1]
+			var solution = args[1]
 			var solutionHash = sha256.Sum256([]byte(solution))
 			var solutionHashString = hex.EncodeToString(solutionHash[:])
 
@@ -109,8 +109,10 @@ func GetCmdRevealSolution(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			var solution = args[0]
+			var solutionHash = sha256.Sum256([]byte(solution))
+			var solutionHashString = hex.EncodeToString(solutionHash[:])
 
-			msg := types.NewMsgRevealSolution(cliCtx.GetFromAddress(), solution)
+			msg := types.NewMsgRevealSolution(cliCtx.GetFromAddress(), solutionHashString, solution)
 			err := msg.ValidateBasic()
 			if err != nil {
 				return err

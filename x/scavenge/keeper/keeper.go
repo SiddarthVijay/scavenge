@@ -38,7 +38,7 @@ func (k Keeper) GetCommit(ctx sdk.Context, solutionScavengerHash string) (types.
 	store := ctx.KVStore(k.storeKey)
 	var commit types.Commit
 	byteKey := []byte(types.CommitPrefix + solutionScavengerHash)
-	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(byteKey), &item)
+	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(byteKey), &commit)
 	if err != nil {
 		return commit, err
 	}
